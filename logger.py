@@ -1,3 +1,5 @@
+# File no longer needed (delete later)
+
 import logging
 
 from colorlog import ColoredFormatter
