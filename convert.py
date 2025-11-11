@@ -10,22 +10,6 @@ from collections import OrderedDict
 
 import typer
 
-# --- Logging Stuff ---
-import logging
-from colorlog import ColoredFormatter
-
-LOG_LEVEL = logging.INFO
-LOGFORMAT = "  %(log_color)s%(levelname)-8s%(reset)s| %(name)s | %(log_color)s%(message)s%(reset)s | (%(filename)s:%(lineno)d)"
-logging.root.setLevel(LOG_LEVEL)
-formatter = ColoredFormatter(LOGFORMAT)
-stream = logging.StreamHandler()
-stream.setLevel(LOG_LEVEL)
-stream.setFormatter(formatter)
-log = logging.getLogger("onnx-typecast")
-log.setLevel(LOG_LEVEL)
-log.addHandler(stream)
-
-# ---
 
 def make_param_dictionary(initializer):
     params = OrderedDict()
@@ -86,8 +70,8 @@ def convert_model_to_int32(model_path: str, out_path: str):
         model_path (str): path to original ONNX model.\n
         out_path (str): path to save converted model.
     """
-    log.info("ONNX INT64 --> INT32 Converter")
-    log.info(f"Loading Model: {model_path}")
+    print("ONNX INT64 --> INT32 Converter")
+    print(f"Loading Model: {model_path}")
     # * load model.
     model = onnx.load_model(model_path)
     ch.check_model(model)
@@ -98,14 +82,14 @@ def convert_model_to_int32(model_path: str, out_path: str):
     init = graph.initializer
     # * collect model params in a dictionary.
     params_dict = make_param_dictionary(init)
-    log.info("Converting INT64 model params to INT32...")
+    print("Converting INT64 model params to INT32...")
     # * convert all INT64 aprams to INT32.
     converted_params = convert_params_to_int32(params_dict)
-    log.info("Converting constant INT64 nodes to INT32...")
+    print("Converting constant INT64 nodes to INT32...")
     new_nodes = convert_constant_nodes_to_int32(graph.node)
 
     graph_name = f"{graph.name}-int32"
-    log.info("Creating new graph...")
+    print("Creating new graph...")
     # * create a new graph with converted params and new nodes.
     graph_int32 = h.make_graph(
         new_nodes,
@@ -114,13 +98,13 @@ def convert_model_to_int32(model_path: str, out_path: str):
         graph.output,
         initializer=converted_params,
     )
-    log.info("Creating new int32 model...")
+    print("Creating new int32 model...")
     model_int32 = h.make_model(graph_int32, producer_name="onnx-typecast")
     model_int32.opset_import[0].version = opset_version
     ch.check_model(model_int32)
-    log.info(f"Saving converted model as: {out_path}")
+    print(f"Saving converted model as: {out_path}")
     onnx.save_model(model_int32, out_path)
-    log.info(f"Done Done London. 🎉")
+    print(f"Done Done London. 🎉")
     return
 
 
